@@ -1,11 +1,17 @@
 import React from 'react';
+import axios from 'axios';
 
 import MovieList from './MovieList';
 import SearchBar from './SearchBar';
 import AddMovie from './AddMovie';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Link, Redirect } from 'react-router-dom';
 import EditMovie from './EditMovie';
-import { movieData } from '../data/movieData';
+import Login from './Login';
+import Signup from './Signup';
+import Navbar from './Navbar';
+import Header from './Header';
+import Footer from './Footer';
+import PrivateRoute from './PrivateRoute';
 
 class ErrorBoundary extends React.Component {
     state = { hasError: false, error: null };
@@ -34,19 +40,47 @@ class App extends React.Component {
         movies: [],
         searchQuery: "",
         loading: true,
-        error: null
+        error: null,
+        user: null,
+        token: null
     }
 
     componentDidMount() {
         console.log('App mounted');
+        this.checkAuthStatus();
+        this.loadMovies();
+    }
+
+    checkAuthStatus = () => {
+        // Clear any existing user session to show home page by default
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Always start with no user logged in
+        this.setState({ token: null, user: null });
+    }
+
+    loadMovies = async () => {
         try {
             this.setState({ loading: true });
-            this.setState({ 
-                movies: movieData.movies,
-                loading: false 
-            }, () => {
-                console.log('Movies loaded:', this.state.movies);
-            });
+            
+            if (this.state.token) {
+                // Load movies from API if authenticated
+                const config = {
+                    headers: { Authorization: `Bearer ${this.state.token}` }
+                };
+                const response = await axios.get('http://localhost:5000/api/movies', config);
+                this.setState({ 
+                    movies: response.data,
+                    loading: false 
+                });
+            } else {
+                // Show empty state for non-authenticated users
+                this.setState({ 
+                    movies: [],
+                    loading: false 
+                });
+            }
         } catch (error) {
             console.error('Error loading movies:', error);
             this.setState({ 
@@ -56,15 +90,24 @@ class App extends React.Component {
         }
     }
 
-    // this is event functione and set state part next part is being update button side in MoveLisr.js page
-    // this is function to delete movie with onclick
-    deleteMovie = (movie) => {
-        const newMovieList = this.state.movies.filter(
-            m => m.id !== movie.id
-        );
-        this.setState({
-            movies: newMovieList
-        })
+    // Delete movie function
+    deleteMovie = async (movie) => {
+        try {
+            const config = {
+                headers: { Authorization: `Bearer ${this.state.token}` }
+            };
+            await axios.delete(`http://localhost:5000/api/movies/${movie._id}`, config);
+            
+            const newMovieList = this.state.movies.filter(
+                m => m._id !== movie._id
+            );
+            this.setState({
+                movies: newMovieList
+            });
+        } catch (error) {
+            console.error('Error deleting movie:', error);
+            alert('Error deleting movie. Please try again.');
+        }
     }
 
     searchMovie = (event) => {
@@ -72,21 +115,65 @@ class App extends React.Component {
         this.setState({ searchQuery: event.target.value });
     }
 
-    AddMovie = (movie) => {
-        const newMovie = {
-            ...movie,
-            id: this.state.movies.length + 1
-        };
-        this.setState(state => ({
-            movies: [...state.movies, newMovie]
-        }));
+    addMovie = async (movie) => {
+        try {
+            const config = {
+                headers: { Authorization: `Bearer ${this.state.token}` }
+            };
+            const response = await axios.post('http://localhost:5000/api/movies', movie, config);
+            
+            this.setState(state => ({
+                movies: [response.data, ...state.movies]
+            }));
+        } catch (error) {
+            console.error('Error adding movie:', error);
+            alert('Error adding movie. Please try again.');
+        }
     }
 
-    EditMovie = (id, updatedMovie) => {
-        const updatedMovies = this.state.movies.map(movie =>
-            movie.id === parseInt(id) ? { ...updatedMovie, id: parseInt(id) } : movie
-        );
-        this.setState({ movies: updatedMovies });
+    editMovie = async (id, updatedMovie) => {
+        try {
+            const config = {
+                headers: { Authorization: `Bearer ${this.state.token}` }
+            };
+            const response = await axios.put(`http://localhost:5000/api/movies/${id}`, updatedMovie, config);
+            
+            const updatedMovies = this.state.movies.map(movie =>
+                movie._id === id ? response.data : movie
+            );
+            this.setState({ movies: updatedMovies });
+        } catch (error) {
+            console.error('Error updating movie:', error);
+            alert('Error updating movie. Please try again.');
+        }
+    }
+
+    handleLogin = (token, user) => {
+        this.setState({ token, user }, () => {
+            this.loadMovies();
+        });
+    }
+
+    handleLogout = () => {
+        console.log('Logout function called'); // Debug log
+        
+        // Clear localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        console.log('localStorage cleared'); // Debug log
+        
+        // Reset state
+        this.setState({ 
+            token: null, 
+            user: null, 
+            movies: [],
+            searchQuery: "",
+            loading: false,
+            error: null
+        }, () => {
+            console.log('State updated after logout:', this.state); // Debug log
+        });
     }
 
     render() {
@@ -119,54 +206,95 @@ class App extends React.Component {
                 return movie.name.toLowerCase().indexOf(this.state.searchQuery.toLowerCase()) !== -1;
             }
         ).sort((a, b) => {
-            return a.id < b.id ? 1 : a.id > b.id ? -1 : 0;
+            return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
         return (
             <ErrorBoundary>
                 <Router>
-                    <div className="container">
-                        <Switch>
-                            <Route path="/" exact render={() => (
-                                <React.Fragment>
-                                    <div className="row">
-                                        <div className="col-lg-12">
-                                            <SearchBar
-                                                searchMovieProp={this.searchMovie}
-                                            />
-                                        </div>
-                                    </div>
-                                    {filteredMovies.length === 0 ? (
-                                        <div className="alert alert-info">
-                                            No movies found.
-                                        </div>
-                                    ) : (
-                                        <MovieList
-                                            movies={filteredMovies}
-                                            deleteMovieProp={this.deleteMovie}
+                    <div>
+                        <Header user={this.state.user} movies={this.state.movies} />
+                        <Navbar user={this.state.user} onLogout={this.handleLogout} />
+                        <div className="container">
+                            <Switch>
+                                <Route path="/login" render={() => (
+                                    <Login onLogin={this.handleLogin} />
+                                )} />
+                                
+                                <Route path="/signup" render={() => (
+                                    <Signup onLogin={this.handleLogin} />
+                                )} />
+
+                                <Route path="/" exact render={() => (
+                                    <React.Fragment>
+                                        {!this.state.user ? (
+                                            <div className="text-center mt-5">
+                                                <h2>Welcome to Movie App</h2>
+                                                <p className="lead">Please login or sign up to manage your movies.</p>
+                                                <div className="mt-4">
+                                                    <Link to="/login" className="btn btn-primary me-3">
+                                                        Login
+                                                    </Link>
+                                                    <Link to="/signup" className="btn btn-success">
+                                                        Sign Up
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <React.Fragment>
+                                                <div className="row">
+                                                    <div className="col-lg-12">
+                                                        <SearchBar
+                                                            searchMovieProp={this.searchMovie}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                {filteredMovies.length === 0 ? (
+                                                    <div className="alert alert-info">
+                                                        No movies found. Add your first movie!
+                                                    </div>
+                                                ) : (
+                                                    <MovieList
+                                                        movies={filteredMovies}
+                                                        deleteMovieProp={this.deleteMovie}
+                                                    />
+                                                )}
+                                            </React.Fragment>
+                                        )}
+                                    </React.Fragment>
+                                )} />
+
+                                <PrivateRoute 
+                                    path="/add" 
+                                    user={this.state.user}
+                                    component={({ history }) => (
+                                        <AddMovie
+                                            onAddMovie={(movie) => {
+                                                this.addMovie(movie);
+                                                history.push("/");
+                                            }}
                                         />
                                     )}
-                                </React.Fragment>
-                            )} />
-
-                            <Route path="/Add" render={({ history }) => (
-                                <AddMovie
-                                    onAddMovie={(movie) => {
-                                        this.AddMovie(movie)
-                                        history.push("/")
-                                    }}
                                 />
-                            )} />
 
-                            <Route path="/edit/:id" render={(props) => (
-                                <EditMovie
-                                    {...props}
-                                    onEditMovie={(id, movie) => {
-                                        this.EditMovie(id, movie)                                   
-                                    }}
+                                <PrivateRoute 
+                                    path="/edit/:id" 
+                                    user={this.state.user}
+                                    component={(props) => (
+                                        <EditMovie
+                                            {...props}
+                                            onEditMovie={(id, movie) => {
+                                                this.editMovie(id, movie);
+                                            }}
+                                        />
+                                    )}
                                 />
-                            )} />
-                        </Switch>
+                                
+                                {/* Redirect any unknown routes to home page */}
+                                <Route path="*" render={() => <Redirect to="/" />} />
+                            </Switch>
+                        </div>
+                        <Footer />
                     </div>
                 </Router>
             </ErrorBoundary>

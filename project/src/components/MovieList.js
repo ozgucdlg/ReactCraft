@@ -19,7 +19,7 @@ const MovieList = (props) => {
     return (
         <div className="row">
             {props.movies.map((movie) => (
-                <div className="col-lg-4" key={movie.id}>
+                <div className="col-lg-4" key={movie._id}>
                     <div className="card mb-4 shadow-sm">
                         <img 
                             src={movie.imageURL} 
@@ -44,7 +44,7 @@ const MovieList = (props) => {
                                 <Link 
                                     type="button"
                                     className="btn btn-md btn-outline-primary"
-                                    to={`edit/${movie.id}`}
+                                    to={`edit/${movie._id}`}
                                 >
                                     Edit
                                 </Link>

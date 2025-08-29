@@ -11,20 +11,29 @@ class EditMovie extends React.Component {
         imageURL: ""
     }
     async componentDidMount () {
-        const id =  this.props.match.params.id;
+        const id = this.props.match.params.id;
         console.log(id);
 
-        const response = await axios.get(`http://localhost:3002/movies/${id}`);
-       // console.log(reponse.data);
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: { Authorization: `Bearer ${token}` }
+            };
+            
+            const response = await axios.get(`http://localhost:5000/api/movies/${id}`, config);
+            const movie = response.data;
 
-       const movie = response.data;
-
-       this.setState({
-           name:movie.name,
-           rating:movie.rating,
-           overview:movie.overview,
-           imageURL:movie.imageURL
-       })
+            this.setState({
+                name: movie.name,
+                rating: movie.rating,
+                overview: movie.overview,
+                imageURL: movie.imageURL
+            });
+        } catch (error) {
+            console.error('Error loading movie:', error);
+            alert('Error loading movie. Please try again.');
+            this.props.history.push('/');
+        }
     }
     onInputChange = (event) =>{
        // console.log(event.target.name);

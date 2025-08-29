@@ -1,70 +1,174 @@
-# Getting Started with Create React App
+# Movie App with Authentication
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack React application for managing movies with user authentication using MongoDB.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- 🔐 User authentication (login/signup)
+- 🎬 CRUD operations for movies
+- 🔍 Search functionality
+- 👤 User-specific movie collections
+- 🎨 Modern UI with Bootstrap
+- 🔒 Protected routes
+- 💾 Persistent data with MongoDB
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Frontend
+- React 17
+- React Router DOM
+- Axios
+- Bootstrap 5
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Backend
+- Node.js
+- Express.js
+- MongoDB with Mongoose
+- JWT Authentication
+- bcryptjs for password hashing
 
-### `npm test`
+## Setup Instructions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB Atlas account
+- npm or yarn
 
-### `npm run build`
+### Backend Setup
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Navigate to the server directory:**
+   ```bash
+   cd server
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. **Configure environment variables:**
+   - Open `config.env` file
+   - Update the MongoDB connection string with your credentials
+   - Change the JWT_SECRET to a secure random string
 
-### `npm run eject`
+4. **Start the backend server:**
+   ```bash
+   npm run dev
+   ```
+   The server will run on `http://localhost:5000`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Frontend Setup
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. **Navigate to the project root:**
+   ```bash
+   cd ..
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+3. **Start the React development server:**
+   ```bash
+   npm start
+   ```
+   The app will run on `http://localhost:3000`
 
-## Learn More
+## API Endpoints
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Authentication
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login user
+- `GET /api/auth/user` - Get current user (protected)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Movies (All protected)
+- `GET /api/movies` - Get all movies for current user
+- `POST /api/movies` - Add a new movie
+- `GET /api/movies/:id` - Get a specific movie
+- `PUT /api/movies/:id` - Update a movie
+- `DELETE /api/movies/:id` - Delete a movie
 
-### Code Splitting
+## Usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. **Register/Login:** Create an account or login with existing credentials
+2. **Add Movies:** Click "Add Movie" to add new movies to your collection
+3. **Search:** Use the search bar to filter movies by name
+4. **Edit/Delete:** Use the buttons on each movie card to edit or delete
+5. **Logout:** Click on your username in the navbar to logout
 
-### Analyzing the Bundle Size
+## Security Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- Password hashing with bcryptjs
+- JWT token-based authentication
+- Protected API routes
+- User-specific data isolation
+- Input validation and sanitization
 
-### Making a Progressive Web App
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```
+project/
+├── server/                 # Backend
+│   ├── models/            # MongoDB models
+│   ├── routes/            # API routes
+│   ├── middleware/        # Authentication middleware
+│   ├── server.js          # Main server file
+│   └── package.json       # Backend dependencies
+├── src/
+│   ├── components/        # React components
+│   │   ├── Login.js       # Login component
+│   │   ├── Signup.js      # Signup component
+│   │   ├── Navbar.js      # Navigation bar
+│   │   ├── PrivateRoute.js # Protected route wrapper
+│   │   └── ...            # Other components
+│   └── index.js           # React entry point
+└── package.json           # Frontend dependencies
+```
 
-### Advanced Configuration
+## Troubleshooting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Common Issues
 
-### Deployment
+1. **MongoDB Connection Error:**
+   - Check your connection string in `config.env`
+   - Ensure your IP is whitelisted in MongoDB Atlas
+   - Verify your username and password
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+2. **CORS Errors:**
+   - The backend is configured to allow requests from `http://localhost:3000`
+   - If using a different port, update the CORS configuration
 
-### `npm run build` fails to minify
+3. **JWT Token Issues:**
+   - Clear localStorage and login again
+   - Check that the JWT_SECRET is properly set
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Development Tips
+
+- Use `npm run dev` in the server directory for auto-restart on changes
+- Check the browser console and server logs for error messages
+- Use the Network tab in browser dev tools to debug API calls
+
+## Deployment
+
+### Backend Deployment
+- Deploy to platforms like Heroku, Railway, or Render
+- Set environment variables in your hosting platform
+- Update the MongoDB connection string for production
+
+### Frontend Deployment
+- Build the app: `npm run build`
+- Deploy the `build` folder to platforms like Vercel, Netlify, or GitHub Pages
+- Update API URLs to point to your deployed backend
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is open source and available under the MIT License.
